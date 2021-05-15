@@ -1,10 +1,18 @@
 package ink.ptms.fenestra
 
+import io.izzel.taboolib.kotlin.getLocalData
 import io.izzel.taboolib.kotlin.sendLocale
 import io.izzel.taboolib.util.item.Items
 import org.bukkit.entity.Player
 
 object FenestraAPI {
+
+    /**
+     * 玩家是否在编辑模式中
+     */
+    var Player.isEditMode: Boolean
+        set(it) = getLocalData().set("fenestra.edit-mode", it)
+        get() = getLocalData().getBoolean("fenestra.edit-mode")
 
     /**
      * [Fenestra] Edit Panel:
