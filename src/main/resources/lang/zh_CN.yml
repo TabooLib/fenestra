@@ -1,1 +1,15 @@
 command-edit-description: '编辑物品数据'
+command-input-select: '点击选择'
+command-node-hover: '点击编辑'
+workspace-notify:
+  ==: ACTION
+  text: '当前处于「&e&lFenestra&f」编辑模式, 按下 &e&lF&f 键退出'
+workspace-cancel:
+  - ==: ACTION
+    text: ''
+  - ==: TEXT
+    text: '&c[Fenestra] &7已退出编辑模式。'
+workspace-generic-delete: '&c删除节点'
+workspace-generic-edit: '&7编辑内容'
+workspace-generic-create: '&7新增同级节点'
+workspace-generic-create-children: '&7新增子级节点'
