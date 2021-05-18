@@ -39,13 +39,17 @@ object FenestraAPI {
     /**
      * 进入编辑模式
      */
-    fun Player.createWorkspace() {
+    fun Player.createWorkspace(readMode: Boolean = false) {
         val itemInMainHand = inventory.itemInMainHand
         if (Items.isNull(itemInMainHand)) {
-            sendLocale("edit-item-air")
+            sendLocale("command-edit-item-air")
             return
         }
-        FenestraAPI.workspace[name] = Workspace(this, itemInMainHand)
+        if (readMode) {
+            Workspace(this, itemInMainHand, true)
+        } else {
+            FenestraAPI.workspace[name] = Workspace(this, itemInMainHand)
+        }
     }
 
     /**

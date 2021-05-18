@@ -1,6 +1,7 @@
 package ink.ptms.fenestra
 
 import ink.ptms.fenestra.FenestraAPI.createWorkspace
+import ink.ptms.fenestra.FenestraAPI.toLegacyText
 import ink.ptms.fenestra.FenestraAPI.workspace
 import io.izzel.taboolib.module.command.base.BaseCommand
 import io.izzel.taboolib.module.command.base.BaseMainCommand
@@ -24,44 +25,80 @@ class FenestraCommand : BaseMainCommand() {
         sender.createWorkspace()
     }
 
+    @SubCommand(description = "@command-info-description")
+    fun info(sender: Player, args: Array<String>) {
+        sender.createWorkspace(true)
+    }
+
     @SubCommand(hideInHelp = true)
     fun update(sender: Player, args: Array<String>) {
         val workspace = sender.workspace ?: return
-        val nbt = workspace.channels[args[0]] ?: return
-        val index = Coerce.toInteger(args[1])
-        when (nbt.type) {
-            NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
-                WorkspaceInputs.nextGenericAction(sender, nbt)
-            }
-            NBTType.INT_ARRAY -> {
-                when (index) {
-                    -1 -> WorkspaceInputs.nextArrayAction(sender, nbt, index, self = true)
-                    -2 -> WorkspaceInputs.nextArrayAction(sender, nbt, index, create = true)
-                    else -> WorkspaceInputs.nextArrayAction(sender, nbt, index)
+        if (args[0] == "create") {
+            WorkspaceInputs.nextBaseAction(sender)
+        } else {
+            val channel = workspace.channels[args[0]] ?: return
+            val nbt = channel.nbt
+            val index = Coerce.toInteger(args[1])
+            when (nbt.type) {
+                NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
+                    workspace.updateState(nbt.asString().toLegacyText())
+                    WorkspaceInputs.nextGenericAction(sender, nbt)
                 }
-            }
-            NBTType.BYTE_ARRAY -> {
-                when (index) {
-                    -1 -> WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, self = true)
-                    -2 -> WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, create = true)
-                    else -> WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true)
+                NBTType.INT_ARRAY -> {
+                    when (index) {
+                        -1 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index, self = true)
+                        }
+                        -2 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index, create = true)
+                        }
+                        else -> {
+                            workspace.updateState(nbt.asIntArray()[index])
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index)
+                        }
+                    }
                 }
-            }
-            NBTType.LIST -> {
-                if (index == -2) {
-                    println("edit 4 new list")
-                } else {
-                    println("edit 4 edit list")
+                NBTType.BYTE_ARRAY -> {
+                    when (index) {
+                        -1 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, self = true)
+                        }
+                        -2 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, create = true)
+                        }
+                        else -> {
+                            workspace.updateState(nbt.asByteArray()[index])
+                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true)
+                        }
+                    }
                 }
-            }
-            NBTType.COMPOUND -> {
-                if (index == -2) {
-                    println("edit 5 new compound")
-                } else {
-                    println("edit 5 edit compound")
+                NBTType.LIST -> {
+                    if (index < 0) {
+                        workspace.updateState(channel.node)
+                        WorkspaceInputs.nextListAction(sender, nbt)
+                    } else {
+                        val children = nbt.asList()[index]
+                        when (children.type) {
+                            NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
+                                workspace.updateState(children.asString().toLegacyText())
+                            }
+                            else -> {
+                                workspace.updateState("*")
+                            }
+                        }
+                        WorkspaceInputs.nextGenericAction(sender, children)
+                    }
                 }
-            }
-            else -> {
+                NBTType.COMPOUND -> {
+                    workspace.updateState(channel.node)
+                    WorkspaceInputs.nextCompoundAction(sender, nbt)
+                }
+                else -> {
+                }
             }
         }
     }

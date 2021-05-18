@@ -1,6 +1,6 @@
 package ink.ptms.fenestra
 
-import ink.ptms.fenestra.FenestraAPI.toLegacyText
+import ink.ptms.fenestra.FenestraAPI.workspace
 import io.izzel.taboolib.internal.xseries.XMaterial
 import io.izzel.taboolib.module.locale.TLocale
 import io.izzel.taboolib.module.nms.nbt.NBTBase
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
 
 /**
  * Fenestra
- * ink.ptms.fenestra.Inputs
+ * ink.ptms.fenestra.WorkspaceInputs
  *
  * @author sky
  * @since 2021/5/18 12:24 上午
@@ -44,7 +44,7 @@ object WorkspaceInputs {
 
     fun nextGenericAction(player: Player, nbt: NBTBase) {
         MenuBuilder.builder(Fenestra.plugin)
-            .title("Fenestra Generic「${nbt.asString().toLegacyText()}」")
+            .title("Fenestra Generic")
             .rows(3)
             .items("", "  1 2 3  ")
             .put(
@@ -63,6 +63,8 @@ object WorkspaceInputs {
                     .build()
             ).click {
 
+            }.close {
+                player.cancel()
             }.open(player)
     }
 
@@ -99,35 +101,89 @@ object WorkspaceInputs {
                     .build()
             )
             .put(
-                '4', ItemBuilder(XMaterial.WRITABLE_BOOK)
+                '4', ItemBuilder(XMaterial.ENCHANTED_BOOK)
                     .name(TLocale.asString(player, "workspace-generic-create-children"))
                     .build()
             ).click {
 
+            }.close {
+                player.cancel()
             }.open(player)
     }
 
-    fun nextListAction(player: Player) {
+    fun nextListAction(player: Player, nbt: NBTBase) {
         MenuBuilder.builder(Fenestra.plugin)
+            .title("Fenestra List")
+            .rows(3)
             .items("", "  1 2 3  ")
             .put(
                 '1', ItemBuilder(XMaterial.LAVA_BUCKET)
                     .name(TLocale.asString(player, "workspace-generic-delete"))
-                    .lore(TLocale.asString(player, "workspace-generic-delete-all"))
-                    .build()
-            )
-            .put(
-                '2', ItemBuilder(XMaterial.BOOK)
-                    .name(TLocale.asString(player, "workspace-generic-edit"))
-                    .lore(TLocale.asString(player, "workspace-generic-edit-all"))
                     .build()
             )
             .put(
                 '2', ItemBuilder(XMaterial.WRITABLE_BOOK)
                     .name(TLocale.asString(player, "workspace-generic-create"))
                     .build()
+            )
+            .put(
+                '3', ItemBuilder(XMaterial.ENCHANTED_BOOK)
+                    .name(TLocale.asString(player, "workspace-generic-create-children"))
+                    .build()
             ).click {
 
+            }.close {
+                player.cancel()
             }.open(player)
+    }
+
+    fun nextCompoundAction(player: Player, nbt: NBTBase) {
+        MenuBuilder.builder(Fenestra.plugin)
+            .title("Fenestra Compound")
+            .rows(3)
+            .items("", "  1 2 3  ")
+            .put(
+                '1', ItemBuilder(XMaterial.LAVA_BUCKET)
+                    .name(TLocale.asString(player, "workspace-generic-delete"))
+                    .build()
+            )
+            .put(
+                '2', ItemBuilder(XMaterial.WRITABLE_BOOK)
+                    .name(TLocale.asString(player, "workspace-generic-create"))
+                    .build()
+            )
+            .put(
+                '3', ItemBuilder(XMaterial.ENCHANTED_BOOK)
+                    .name(TLocale.asString(player, "workspace-generic-create-children"))
+                    .build()
+            ).click {
+
+            }.close {
+                player.cancel()
+            }.open(player)
+    }
+
+    fun nextBaseAction(player: Player) {
+        MenuBuilder.builder(Fenestra.plugin)
+            .title("Fenestra")
+            .rows(3)
+            .items("", "    1  ")
+            .put(
+                '1', ItemBuilder(XMaterial.WRITABLE_BOOK)
+                    .name(TLocale.asString(player, "workspace-generic-create"))
+                    .build()
+            )
+            .click {
+
+            }.close {
+                player.cancel()
+            }.open(player)
+    }
+
+    private fun Player.cancel() {
+        workspace?.run {
+            cancelState()
+            send()
+        }
     }
 }

@@ -1,4 +1,6 @@
+command-edit-item-air: '&c[Fenestra] &7请手持任意物品。'
 command-edit-description: '编辑物品数据'
+command-info-description: '查看物品数据'
 command-input-select: '点击选择'
 command-node-hover: '点击编辑'
 workspace-notify:
@@ -13,3 +15,4 @@ workspace-generic-delete: '&c删除节点'
 workspace-generic-edit: '&7编辑内容'
 workspace-generic-create: '&7新增同级节点'
 workspace-generic-create-children: '&7新增子级节点'
+workspace-state: '&f「{0}&f」'
