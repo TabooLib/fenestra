@@ -1,22 +1,13 @@
 package ink.ptms.fenestra
 
 import io.izzel.taboolib.Version
-import io.izzel.taboolib.internal.xseries.XMaterial
-import io.izzel.taboolib.kotlin.Reflex.Companion.reflex
 import io.izzel.taboolib.kotlin.sendLocale
 import io.izzel.taboolib.module.inject.PlayerContainer
-import io.izzel.taboolib.module.locale.TLocale
-import io.izzel.taboolib.module.nms.nbt.NBTBase
-import io.izzel.taboolib.module.nms.nbt.NBTType
 import io.izzel.taboolib.module.tellraw.TellrawJson
 import io.izzel.taboolib.util.chat.ComponentSerializer
 import io.izzel.taboolib.util.chat.TextComponent
-import io.izzel.taboolib.util.item.ItemBuilder
 import io.izzel.taboolib.util.item.Items
-import io.izzel.taboolib.util.item.inventory.MenuBuilder
-import org.bukkit.Material
 import org.bukkit.entity.Player
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 
 object FenestraAPI {
@@ -80,5 +71,13 @@ object FenestraAPI {
         } else {
             this
         }
+    }
+
+    fun String.toCompoundText(): String {
+        return ComponentSerializer.toString(*TextComponent.fromLegacyText(this).also {
+            if (it[0].colorRaw != null) {
+                it[0].isItalic = false
+            }
+        })
     }
 }

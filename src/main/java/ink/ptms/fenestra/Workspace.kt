@@ -8,6 +8,7 @@ import io.izzel.taboolib.module.locale.TLocale
 import io.izzel.taboolib.module.nms.nbt.NBTBase
 import io.izzel.taboolib.module.nms.nbt.NBTType
 import io.izzel.taboolib.module.tellraw.TellrawJson
+import io.izzel.taboolib.util.Coerce
 import org.bukkit.Bukkit
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
@@ -102,7 +103,36 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
      * 更新工作通道（从数据结构中更新数据）
      */
     fun updateChannel(channel: Channel, value: Any, index: Int = -1) {
+        if (index != -1) {
+            if (channel.nbt.type == NBTType.INT_ARRAY) {
+                channel.nbt.asIntArray()[index] = Coerce.toInteger(value)
+            } else if (channel.nbt.type == NBTType.BYTE_ARRAY) {
+                channel.nbt.asByteArray()[index] = Coerce.toByte(value)
+            }
+        } else {
+            channel.nbt.type.createGenericData(channel.path, value, channel.nbt)
+        }
+    }
 
+    /**
+     * 新增数据
+     */
+    fun createChannel(channel: Channel, type: NBTType, node: String? = null, data: Any? = null, children: Boolean = false) {
+        when {
+            children -> {
+                writeNBT("${channel.path}${if (node == null) "" else ".$node"}", channel.nbt, type, node, data)
+            }
+            channel.parent == null -> {
+                compound[node] = when {
+                    type.isListType() -> type.createEmptyListData()
+                    data != null -> type.createGenericData(node.toString(), data)
+                    else -> return
+                }
+            }
+            else -> {
+                writeNBT(channel.path, channel.parent.nbt, type, node, data)
+            }
+        }
     }
 
     /**
@@ -115,7 +145,7 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             val parent = channel.parent.nbt
             when (parent.type) {
                 NBTType.COMPOUND -> {
-                    parent.asCompound().remove(channel.path)
+                    parent.asCompound().remove(channel.node)
                 }
                 NBTType.LIST -> {
                     parent.asList().remove(channel.nbt)
@@ -143,18 +173,20 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
     }
 
     private fun TellrawJson.editJson(nbt: NBTBase, path: String, node: String, parent: Channel?, index: Int = -1): TellrawJson {
+        val source = if (nbt.type == NBTType.STRING) "\n§f${nbt.asString()}" else ""
         if (isReadOnly) {
+            hoverText("§7$path$source")
             return this
         }
         val uuid = UUID.randomUUID().toString()
         val channel = Channel(nbt, path, node, parent)
         channels[uuid] = channel
-        return clickCommand("/fenestra update $uuid $index").hoverText("§7${TLocale.asString(player, "command-node-hover")}")
+        return clickCommand("/fenestra update $uuid $index").hoverText("§7${TLocale.asString(player, "command-node-hover")}\n§8$path$source")
     }
 
     private fun TellrawJson.appendJson(path: String, node: String, nbt: NBTBase, space: Int, parent: Channel?, inList: Boolean = false): TellrawJson {
         if (node.contains('.')) {
-            append("§c<$path>").hoverText(TLocale.asString(player, "workspace-not-edit"))
+            append("§c<$node>").hoverText(TLocale.asString(player, "workspace-not-edit"))
             return this
         }
         when (nbt.type) {
@@ -183,9 +215,10 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             NBTType.LIST -> {
                 val channel = getChannel(nbt)
                 nbt.asList().forEachIndexed { index, data ->
-                    newLine().append(repeat(inList, space + 1, index))
-                        .append("- ").editJson(data, path, node, channel, index)
-                        .appendJson(path, node, data, space, channel, true)
+                    if (!inList || index > 0) {
+                        newLine().append(repeat(inList, space + 1, index))
+                    }
+                    append("- ").editJson(data, path, node, channel, index).appendJson(path, node, data, space, channel, true)
                 }
                 if (nbt.asList().isEmpty()) {
                     append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Any)")
@@ -194,8 +227,10 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             NBTType.INT_ARRAY -> {
                 val channel = getChannel(nbt)
                 nbt.asIntArray().forEachIndexed { index, data ->
-                    newLine().append(repeat(inList, space + 1, index))
-                        .append("- §f${data}").editJson(nbt, path, node, channel, index)
+                    if (!inList || index > 0) {
+                        newLine().append(repeat(inList, space + 1, index))
+                    }
+                    append("- §f${data}").editJson(nbt, path, node, channel, index)
                 }
                 if (nbt.asIntArray().isEmpty()) {
                     append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Int)")
@@ -204,8 +239,10 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             NBTType.BYTE_ARRAY -> {
                 val channel = getChannel(nbt)
                 nbt.asByteArray().forEachIndexed { index, data ->
-                    newLine().append(repeat(inList, space + 1, index))
-                        .append("- §f${data}§7b").editJson(nbt, path, node, channel, index)
+                    if (!inList || index > 0) {
+                        newLine().append(repeat(inList, space + 1, index))
+                    }
+                    append("- §f${data}§7b").editJson(nbt, path, node, channel, index)
                 }
                 if (nbt.asByteArray().isEmpty()) {
                     append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Byte)")
@@ -257,6 +294,39 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
             append("§8「§fFenestra§8」")
             append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
+        }
+    }
+
+    private fun writeNBT(path: String, base: NBTBase, type: NBTType, node: String?, data: Any?) {
+        when (base.type) {
+            NBTType.COMPOUND -> {
+                base.asCompound()[node] = when {
+                    type.isListType() -> type.createEmptyListData()
+                    data != null -> type.createGenericData(path, data)
+                    else -> return
+                }
+            }
+            NBTType.LIST -> {
+                base.asList().add(
+                    when {
+                        type.isListType() -> type.createEmptyListData()
+                        data != null -> type.createGenericData(path, data)
+                        else -> return
+                    }
+                )
+            }
+            NBTType.INT_ARRAY -> {
+                val array = base.asIntArray().toMutableList()
+                array.add(Coerce.toInteger(data))
+                base.reflex("data", array.toIntArray())
+            }
+            NBTType.BYTE_ARRAY -> {
+                val array = base.asByteArray().toMutableList()
+                array.add(Coerce.toByte(data))
+                base.reflex("data", array.toByteArray())
+            }
+            else -> {
+            }
         }
     }
 }

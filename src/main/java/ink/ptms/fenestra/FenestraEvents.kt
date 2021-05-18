@@ -2,7 +2,6 @@ package ink.ptms.fenestra
 
 import ink.ptms.fenestra.FenestraAPI.cancelWorkspace
 import ink.ptms.fenestra.FenestraAPI.inWorkspace
-import ink.ptms.fenestra.FenestraAPI.workspace
 import io.izzel.taboolib.kotlin.sendLocale
 import io.izzel.taboolib.module.inject.TListener
 import io.izzel.taboolib.module.inject.TSchedule

@@ -9,9 +9,15 @@ import io.izzel.taboolib.util.item.ItemBuilder
 import io.izzel.taboolib.util.item.inventory.MenuBuilder
 import org.bukkit.entity.Player
 
-object InputList : Input {
+class InputList(
+    player: Player,
+    val channel: Channel,
+    val create: Boolean = false,
+    val self: Boolean = false
+) : Input(player) {
 
-    fun next(player: Player, channel: Channel, create: Boolean = false, self: Boolean = false) {
+    override fun next() {
+        closeEvent[1] = true
         MenuBuilder.builder(Fenestra.plugin)
             .title("Fenestra List")
             .rows(3)
@@ -39,21 +45,23 @@ object InputList : Input {
                 '3', ItemBuilder(XMaterial.ENCHANTED_BOOK)
                     .name(TLocale.asString(player, "workspace-generic-create-children"))
                     .build()
-            ).click {
-                when (it.slot) {
+            ).click { c1 ->
+                when (c1.slot) {
                     '1' -> {
                         player.workspace?.removeChannel(channel)
                         player.closeInventory()
                     }
                     '2' -> {
-
+                        createNode(channel)
                     }
                     '3' -> {
-
+                        createNode(channel, children = true)
                     }
                 }
             }.close {
-                player.cancel()
+                if (closeEvent[1]!!) {
+                    player.cancel()
+                }
             }.open(player)
     }
 }

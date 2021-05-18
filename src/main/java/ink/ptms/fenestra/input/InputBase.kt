@@ -7,9 +7,10 @@ import io.izzel.taboolib.util.item.ItemBuilder
 import io.izzel.taboolib.util.item.inventory.MenuBuilder
 import org.bukkit.entity.Player
 
-object InputBase : Input {
+class InputBase(player: Player) : Input(player) {
 
-    fun next(player: Player) {
+    override fun next() {
+        closeEvent[1] = true
         MenuBuilder.builder(Fenestra.plugin)
             .title("Fenestra")
             .rows(3)
@@ -20,12 +21,13 @@ object InputBase : Input {
                     .build()
             )
             .click {
-                when (it.slot) {
-                    '1' -> {
-                    }
+                if (it.slot == '1') {
+                    createBaseNode()
                 }
             }.close {
-                player.cancel()
+                if (closeEvent[1]!!) {
+                    player.cancel()
+                }
             }.open(player)
     }
 }

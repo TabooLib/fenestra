@@ -22,9 +22,17 @@ workspace-generic-create: '&7新增节点 &f(同级)'
 workspace-generic-create-children: '&7新增节点 &f(子级)'
 workspace-generic-update-data: '&7修改数据内容'
 workspace-generic-update-type: '&7修改数据类型'
-workspace-generic-input:
+workspace-generic-input-node:
   ==: JSON
-  text: '&c[Fenestra] &7在&f聊天框&7中输入新的数据内容: <cancel>'
+  text: '&c[Fenestra] &7在&f聊天框&7中输入新的节点名称: <@cancel>'
+  args:
+    cancel:
+      text: '&c(取消输入)'
+      hover: '&c点击取消'
+      command: 'cancel;'
+workspace-generic-input-data:
+  ==: JSON
+  text: '&c[Fenestra] &7在&f聊天框&7中输入新的数据内容: <@cancel>'
   args:
     cancel:
       text: '&c(取消输入)'
