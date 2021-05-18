@@ -5,14 +5,30 @@ command-input-select: '点击选择'
 command-node-hover: '点击编辑'
 workspace-notify:
   ==: ACTION
-  text: '当前处于「&e&lFenestra&f」编辑模式, 按下 &e&lF&f 键退出'
+  text: '当前为「&e&lFenestra&f」的编辑模式, 按下 &e&lQ&f 键退出 | 按下 &e&lF&f 键保存并退出'
 workspace-cancel:
   - ==: ACTION
     text: ''
   - ==: TEXT
     text: '&c[Fenestra] &7已退出编辑模式。'
+workspace-cancel-and-save:
+  - ==: ACTION
+    text: ''
+  - ==: TEXT
+    text: '&c[Fenestra] &7已保存物品数据并退出编辑模式。'
 workspace-generic-delete: '&c删除节点'
-workspace-generic-edit: '&7编辑内容'
-workspace-generic-create: '&7新增同级节点'
-workspace-generic-create-children: '&7新增子级节点'
-workspace-state: '&f「{0}&f」'
+workspace-generic-edit: '&7修改数据'
+workspace-generic-create: '&7新增节点 &f(同级)'
+workspace-generic-create-children: '&7新增节点 &f(子级)'
+workspace-generic-update-data: '&7修改数据内容'
+workspace-generic-update-type: '&7修改数据类型'
+workspace-generic-input:
+  ==: JSON
+  text: '&c[Fenestra] &7在&f聊天框&7中输入新的数据内容: <cancel>'
+  args:
+    cancel:
+      text: '&c(取消输入)'
+      hover: '&c点击取消'
+      command: 'cancel;'
+workspace-state: '&r正在编辑:「{0}&r」'
+workspace-not-edit: '&c这个节点不可编辑.'

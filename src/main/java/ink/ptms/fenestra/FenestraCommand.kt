@@ -42,21 +42,21 @@ class FenestraCommand : BaseMainCommand() {
             when (nbt.type) {
                 NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
                     workspace.updateState(nbt.asString().toLegacyText())
-                    WorkspaceInputs.nextGenericAction(sender, nbt)
+                    WorkspaceInputs.nextGenericAction(sender, channel)
                 }
                 NBTType.INT_ARRAY -> {
                     when (index) {
                         -1 -> {
                             workspace.updateState(channel.node)
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index, self = true)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index, self = true)
                         }
                         -2 -> {
                             workspace.updateState(channel.node)
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index, create = true)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index, create = true)
                         }
                         else -> {
                             workspace.updateState(nbt.asIntArray()[index])
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index)
                         }
                     }
                 }
@@ -64,38 +64,45 @@ class FenestraCommand : BaseMainCommand() {
                     when (index) {
                         -1 -> {
                             workspace.updateState(channel.node)
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, self = true)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index, byte = true, self = true)
                         }
                         -2 -> {
                             workspace.updateState(channel.node)
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true, create = true)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index, byte = true, create = true)
                         }
                         else -> {
                             workspace.updateState(nbt.asByteArray()[index])
-                            WorkspaceInputs.nextArrayAction(sender, nbt, index, byte = true)
+                            WorkspaceInputs.nextArrayAction(sender, channel, index, byte = true)
                         }
                     }
                 }
                 NBTType.LIST -> {
-                    if (index < 0) {
-                        workspace.updateState(channel.node)
-                        WorkspaceInputs.nextListAction(sender, nbt)
-                    } else {
-                        val children = nbt.asList()[index]
-                        when (children.type) {
-                            NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
-                                workspace.updateState(children.asString().toLegacyText())
-                            }
-                            else -> {
-                                workspace.updateState("*")
-                            }
+                    when (index) {
+                        -1 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextListAction(sender, channel, self = true)
                         }
-                        WorkspaceInputs.nextGenericAction(sender, children)
+                        -2 -> {
+                            workspace.updateState(channel.node)
+                            WorkspaceInputs.nextListAction(sender, channel, create = true)
+                        }
+                        else -> {
+                            val children = nbt.asList()[index]
+                            when (children.type) {
+                                NBTType.BYTE, NBTType.SHORT, NBTType.INT, NBTType.LONG, NBTType.FLOAT, NBTType.DOUBLE, NBTType.STRING -> {
+                                    workspace.updateState(children.asString().toLegacyText())
+                                }
+                                else -> {
+                                    workspace.updateState("*")
+                                }
+                            }
+                            WorkspaceInputs.nextGenericAction(sender, workspace.getChannel(children)!!)
+                        }
                     }
                 }
                 NBTType.COMPOUND -> {
                     workspace.updateState(channel.node)
-                    WorkspaceInputs.nextCompoundAction(sender, nbt)
+                    WorkspaceInputs.nextCompoundAction(sender, channel)
                 }
                 else -> {
                 }

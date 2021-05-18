@@ -2,6 +2,7 @@ package ink.ptms.fenestra
 
 import com.google.common.base.Strings
 import ink.ptms.fenestra.FenestraAPI.toLegacyText
+import io.izzel.taboolib.kotlin.Reflex.Companion.reflex
 import io.izzel.taboolib.kotlin.getCompound
 import io.izzel.taboolib.module.locale.TLocale
 import io.izzel.taboolib.module.nms.nbt.NBTBase
@@ -40,13 +41,14 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
     private val stateBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
 
     init {
-        send()
+        sendWorkspace()
     }
 
     /**
      * 将编辑视图发送给玩家
+     * 若工作空间仅可读则无法编辑数据
      */
-    fun send() {
+    fun sendWorkspace() {
         channels.clear()
         if (!isReadOnly) {
             player.newWorkspace()
@@ -61,9 +63,7 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
                 }
             }
         } else {
-            compound.forEach { (k, _) ->
-                send(k, k)
-            }
+            compound.keys.forEach { player.newJson { appendJson(it, it, compound[it]!!, 1, null) } }
         }
         splitLine(false)
     }
@@ -71,35 +71,68 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
     /**
      * 将缓存写入物品
      */
-    fun save() {
+    fun saveWorkspace() {
         compound.saveTo(itemStack)
     }
 
+    /**
+     * 更新玩家的编辑状态显示
+     * 头顶血条效果
+     */
     fun updateState(value: Any) {
         stateBar.setTitle(TLocale.asString(player, "workspace-state", value))
         stateBar.addPlayer(player)
     }
 
+    /**
+     * 取消玩家的编辑状态显示
+     */
     fun cancelState() {
         stateBar.removePlayer(player)
     }
 
-    private fun send(path: String, node: String, space: Int = 0) {
-        if (node.contains(".")) {
-            player.newJson { append(Strings.repeat("  ", space)).append("§c<$node>").hoverText("§cThis node is not writable.") }
-        } else {
-            player.newJson { append(path, node, compound.getDeep(path), space + 1, null) }
-        }
+    /**
+     * 通过 NBTBase 获取工作通道
+     */
+    fun getChannel(nbt: NBTBase): Channel? {
+        return channels.values.firstOrNull { it.nbt === nbt }
     }
 
-    private fun splitLine(newLine: Boolean) {
-        player.newJson("") {
-            if (newLine) {
-                newLine()
+    /**
+     * 更新工作通道（从数据结构中更新数据）
+     */
+    fun updateChannel(channel: Channel, value: Any, index: Int = -1) {
+
+    }
+
+    /**
+     * 删除工作通道（从数据结构中移除）
+     */
+    fun removeChannel(channel: Channel, index: Int = -1) {
+        if (channel.parent == null) {
+            compound.remove(channel.path)
+        } else {
+            val parent = channel.parent.nbt
+            when (parent.type) {
+                NBTType.COMPOUND -> {
+                    parent.asCompound().remove(channel.path)
+                }
+                NBTType.LIST -> {
+                    parent.asList().remove(channel.nbt)
+                }
+                NBTType.BYTE_ARRAY -> {
+                    val array = parent.asByteArray().toMutableList()
+                    array.removeAt(index)
+                    parent.reflex("data", array.toByteArray())
+                }
+                NBTType.INT_ARRAY -> {
+                    val array = parent.asIntArray().toMutableList()
+                    array.removeAt(index)
+                    parent.reflex("data", array.toIntArray())
+                }
+                else -> {
+                }
             }
-            append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
-            append("§8「§fFenestra§8」")
-            append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
         }
     }
 
@@ -114,11 +147,16 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             return this
         }
         val uuid = UUID.randomUUID().toString()
-        channels[uuid] = Channel(nbt, path, node, parent)
+        val channel = Channel(nbt, path, node, parent)
+        channels[uuid] = channel
         return clickCommand("/fenestra update $uuid $index").hoverText("§7${TLocale.asString(player, "command-node-hover")}")
     }
 
-    private fun TellrawJson.append(path: String, node: String, nbt: NBTBase, space: Int, parent: Channel?, inList: Boolean = false): TellrawJson {
+    private fun TellrawJson.appendJson(path: String, node: String, nbt: NBTBase, space: Int, parent: Channel?, inList: Boolean = false): TellrawJson {
+        if (node.contains('.')) {
+            append("§c<$path>").hoverText(TLocale.asString(player, "workspace-not-edit"))
+            return this
+        }
         when (nbt.type) {
             NBTType.STRING, NBTType.BYTE, NBTType.SHORT, NBTType.LONG, NBTType.FLOAT, NBTType.INT, NBTType.DOUBLE -> {
                 if (!inList) {
@@ -128,6 +166,8 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             NBTType.BYTE_ARRAY, NBTType.INT_ARRAY, NBTType.COMPOUND, NBTType.LIST -> {
                 if (!inList) {
                     append("§7$node: ").editJson(nbt, path, node, parent)
+                } else {
+                    channels[UUID.randomUUID().toString()] = Channel(nbt, path, node, parent)
                 }
             }
             else -> {
@@ -141,38 +181,44 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
                 append("§f${nbt.asString()}§7${nbt.type.suffix()}").editJson(nbt, path, node, parent)
             }
             NBTType.LIST -> {
-                val channel = getChannelFromNBT(nbt)
+                val channel = getChannel(nbt)
                 nbt.asList().forEachIndexed { index, data ->
-                    newLine().append("  ").append(repeat(inList, space, index)).append("- ").append(path, node, data, space, channel, true)
+                    newLine().append(repeat(inList, space + 1, index))
+                        .append("- ").editJson(data, path, node, channel, index)
+                        .appendJson(path, node, data, space, channel, true)
                 }
                 if (nbt.asList().isEmpty()) {
-                    append("§f[ ]").editJson(nbt, path, node, parent, -2)
+                    append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Any)")
                 }
             }
             NBTType.INT_ARRAY -> {
+                val channel = getChannel(nbt)
                 nbt.asIntArray().forEachIndexed { index, data ->
-                    newLine().append("  ").append(repeat(inList, space, index)).append("- §f${data}").editJson(nbt, path, node, parent, index)
+                    newLine().append(repeat(inList, space + 1, index))
+                        .append("- §f${data}").editJson(nbt, path, node, channel, index)
                 }
                 if (nbt.asIntArray().isEmpty()) {
-                    append("§f[ ]").editJson(nbt, path, node, parent, -2)
+                    append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Int)")
                 }
             }
             NBTType.BYTE_ARRAY -> {
+                val channel = getChannel(nbt)
                 nbt.asByteArray().forEachIndexed { index, data ->
-                    newLine().append("  ").append(repeat(inList, space, index)).append("- §f${data}b").editJson(nbt, path, node, parent, index)
+                    newLine().append(repeat(inList, space + 1, index))
+                        .append("- §f${data}§7b").editJson(nbt, path, node, channel, index)
                 }
                 if (nbt.asByteArray().isEmpty()) {
-                    append("§f[ ]").editJson(nbt, path, node, parent, -2)
+                    append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Byte)")
                 }
             }
             NBTType.COMPOUND -> {
-                val channel = getChannelFromNBT(nbt)
+                val channel = getChannel(nbt)
                 var i = 0
                 nbt.asCompound().forEach { (key, data) ->
                     if (!inList || i > 0) {
                         newLine().append(Strings.repeat("  ", space + if (inList) 2 else 1))
                     }
-                    append("$path.$key", key, data, space + 1, channel, false)
+                    appendJson("$path.$key", key, data, space + 1, channel, false)
                     i++
                 }
                 if (i == 0) {
@@ -203,5 +249,14 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
         }
     }
 
-    private fun getChannelFromNBT(nbt: NBTBase) = channels.values.firstOrNull { it.nbt === nbt }
+    private fun splitLine(newLine: Boolean) {
+        player.newJson("") {
+            if (newLine) {
+                newLine()
+            }
+            append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
+            append("§8「§fFenestra§8」")
+            append("§7§m${Strings.repeat(" ", Fenestra.conf.getInt("default.line-size"))}")
+        }
+    }
 }

@@ -38,19 +38,20 @@ class FenestraEvents : Listener {
     fun e(e: PlayerSwapHandItemsEvent) {
         if (e.player.inWorkspace) {
             e.isCancelled = true
+            e.player.cancelWorkspace(save = true)
+        }
+    }
+
+    @EventHandler
+    fun e(e: PlayerDropItemEvent) {
+        if (e.player.inWorkspace) {
+            e.isCancelled = true
             e.player.cancelWorkspace()
         }
     }
 
     @EventHandler
     fun e(e: PlayerItemHeldEvent) {
-        if (e.player.inWorkspace) {
-            e.isCancelled = true
-        }
-    }
-
-    @EventHandler
-    fun e(e: PlayerDropItemEvent) {
         if (e.player.inWorkspace) {
             e.isCancelled = true
         }

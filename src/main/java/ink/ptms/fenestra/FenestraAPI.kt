@@ -55,10 +55,15 @@ object FenestraAPI {
     /**
      * 退出编辑模式
      */
-    fun Player.cancelWorkspace() {
+    fun Player.cancelWorkspace(save: Boolean = false) {
         FenestraAPI.workspace.remove(name)?.also {
             TellrawJson.create().also { json -> repeat(100) { json.newLine() } }.send(this)
-            sendLocale("workspace-cancel")
+            if (save) {
+                it.saveWorkspace()
+                sendLocale("workspace-cancel-and-save")
+            } else {
+                sendLocale("workspace-cancel")
+            }
         }
     }
 
