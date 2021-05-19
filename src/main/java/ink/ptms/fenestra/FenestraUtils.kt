@@ -33,9 +33,7 @@ fun NBTType.createGenericData(path: String, value: Any, origin: NBTBase? = null)
         NBTType.FLOAT -> base.reflex("data", Coerce.toFloat(value))
         NBTType.DOUBLE -> base.reflex("data", Coerce.toDouble(value))
         NBTType.STRING -> {
-            println(path)
-            Thread.dumpStack()
-            val str = if (path == "display.Name" || path == "display.Lore") {
+            val str = if (path in Fenestra.conf.getStringList("default.text-path")) {
                 if (Version.isAfter(Version.v1_16)) {
                     TLocale.Translate.setColored(value.toString()).toCompoundText()
                 } else {

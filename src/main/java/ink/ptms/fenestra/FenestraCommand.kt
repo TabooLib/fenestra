@@ -3,11 +3,15 @@ package ink.ptms.fenestra
 import ink.ptms.fenestra.FenestraAPI.createWorkspace
 import ink.ptms.fenestra.FenestraAPI.toLegacyText
 import ink.ptms.fenestra.FenestraAPI.workspace
+import io.izzel.taboolib.kotlin.sendLocale
 import io.izzel.taboolib.module.command.base.BaseCommand
 import io.izzel.taboolib.module.command.base.BaseMainCommand
 import io.izzel.taboolib.module.command.base.SubCommand
 import io.izzel.taboolib.module.nms.nbt.NBTType
 import io.izzel.taboolib.util.Coerce
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
+import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.entity.Player
 
 /**
@@ -19,6 +23,15 @@ import org.bukkit.entity.Player
  */
 @BaseCommand(name = "fenestra", aliases = ["fe"], permission = "admin")
 class FenestraCommand : BaseMainCommand() {
+
+    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        if (sender is ConsoleCommandSender) {
+            sender.sendLocale("command-console")
+            return true
+        } else {
+            return super.onCommand(sender, command, label, args)
+        }
+    }
 
     @SubCommand(description = "@command-edit-description")
     fun edit(sender: Player, args: Array<String>) {

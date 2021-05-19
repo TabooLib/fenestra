@@ -1,3 +1,4 @@
+command-console: '&c[Fenestra] &7这个命令不允许在控制台使用。'
 command-edit-item-air: '&c[Fenestra] &7请手持任意物品。'
 command-edit-description: '编辑物品数据'
 command-info-description: '查看物品数据'

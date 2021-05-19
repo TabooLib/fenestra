@@ -154,7 +154,7 @@ abstract class Input(val player: Player) {
                 }
             } else {
                 // 在 List 类型中的任何数据都不需要节点名称
-                if ((children && channel.nbt.type == NBTType.LIST) || channel.parent?.nbt?.type == NBTType.LIST) {
+                if ((children && channel.nbt.type == NBTType.LIST) || (!children && channel.parent?.nbt?.type == NBTType.LIST)) {
                     createNode(channel, type, children = children)
                 }
                 // 输入节点名称
