@@ -237,16 +237,16 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
                 }
             }
             NBTType.BYTE_ARRAY -> {
-                val channel = getChannel(nbt)
-                nbt.asByteArray().forEachIndexed { index, data ->
-                    if (!inList || index > 0) {
-                        newLine().append(repeat(inList, space + 1, index))
-                    }
-                    append("- §f${data}§7b").editJson(nbt, path, node, channel, index)
-                }
-                if (nbt.asByteArray().isEmpty()) {
-                    append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Byte)")
-                }
+                append("§8${nbt.asByteArray().size} Bytes").editJson(nbt, path, node, parent, -2).hoverText(TLocale.asString(player, "workspace-not-edit"))
+//                nbt.asByteArray().forEachIndexed { index, data ->
+//                    if (!inList || index > 0) {
+//                        newLine().append(repeat(inList, space + 1, index))
+//                    }
+//                    append("- §f${data}§7b").editJson(nbt, path, node, channel, index)
+//                }
+//                if (nbt.asByteArray().isEmpty()) {
+//                    append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Byte)")
+//                }
             }
             NBTType.COMPOUND -> {
                 val channel = getChannel(nbt)
