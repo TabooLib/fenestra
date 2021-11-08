@@ -1,37 +1,49 @@
 package ink.ptms.fenestra.input
 
 import ink.ptms.fenestra.Channel
-import ink.ptms.fenestra.Fenestra
 import ink.ptms.fenestra.FenestraAPI.workspace
-import io.izzel.taboolib.internal.xseries.XMaterial
-import io.izzel.taboolib.module.locale.TLocale
-import io.izzel.taboolib.util.item.ItemBuilder
-import io.izzel.taboolib.util.item.inventory.MenuBuilder
+import ink.ptms.fenestra.ItemBuilder
 import org.bukkit.entity.Player
+import taboolib.library.xseries.XMaterial
+import taboolib.module.ui.openMenu
+import taboolib.module.ui.type.Basic
+import taboolib.platform.util.asLangText
 
-class InputCompound(player: Player, val channel: Channel) : Input(player) {
+class InputList(
+    player: Player,
+    val channel: Channel,
+    val create: Boolean = false,
+    val self: Boolean = false
+) : Input(player) {
 
     override fun next() {
         closeEvent[1] = true
-        MenuBuilder.builder(Fenestra.plugin)
-            .title("Fenestra Compound")
-            .rows(3)
-            .items("", "  1 2 3  ")
-            .put(
+        player.openMenu<Basic>("Fenestra List") {
+            rows(3)
+            when {
+                create -> {
+                    map("", "   1 3   ")
+                }
+                self -> {
+                    map("", "  1 2 3  ")
+                }
+            }
+            set(
                 '1', ItemBuilder(XMaterial.LAVA_BUCKET)
-                    .name(TLocale.asString(player, "workspace-generic-delete"))
+                    .name(player.asLangText("workspace-generic-delete"))
                     .build()
             )
-            .put(
+            set(
                 '2', ItemBuilder(XMaterial.WRITABLE_BOOK)
-                    .name(TLocale.asString(player, "workspace-generic-create"))
+                    .name(player.asLangText("workspace-generic-create"))
                     .build()
             )
-            .put(
+            set(
                 '3', ItemBuilder(XMaterial.ENCHANTED_BOOK)
-                    .name(TLocale.asString(player, "workspace-generic-create-children"))
+                    .name(player.asLangText("workspace-generic-create-children"))
                     .build()
-            ).click { c1 ->
+            )
+            onClick { c1 ->
                 when (c1.slot) {
                     '1' -> {
                         player.workspace?.removeChannel(channel)
@@ -44,10 +56,12 @@ class InputCompound(player: Player, val channel: Channel) : Input(player) {
                         createNode(channel, children = true)
                     }
                 }
-            }.close {
+            }
+            onClose {
                 if (closeEvent[1]!!) {
                     player.cancel()
                 }
-            }.open(player)
+            }
+        }
     }
 }

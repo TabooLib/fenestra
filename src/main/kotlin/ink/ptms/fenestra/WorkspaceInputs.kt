@@ -1,13 +1,14 @@
 package ink.ptms.fenestra
 
 import ink.ptms.fenestra.input.*
-import io.izzel.taboolib.module.locale.TLocale
-import io.izzel.taboolib.module.nms.nbt.NBTType
-import io.izzel.taboolib.util.item.ItemBuilder
-import io.izzel.taboolib.util.item.Items
-import io.izzel.taboolib.util.item.inventory.MenuBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import taboolib.library.xseries.XMaterial
+import taboolib.module.nms.ItemTagType
+import taboolib.module.ui.openMenu
+import taboolib.module.ui.type.Basic
+import taboolib.platform.util.asLangText
+import taboolib.platform.util.inventoryCenterSlots
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -39,33 +40,36 @@ object WorkspaceInputs {
         InputBase(player).next()
     }
 
-    fun nextType(player: Player): CompletableFuture<NBTType?> {
+    fun nextType(player: Player): CompletableFuture<ItemTagType?> {
         var closeLogic = true
-        val future = CompletableFuture<NBTType?>()
-        val types = NBTType.values().filter { it != NBTType.END }
-        MenuBuilder.builder()
-            .title("Fenestra Types")
-            .rows(6)
-            .build {
+        val future = CompletableFuture<ItemTagType?>()
+        val types = ItemTagType.values().filter { it != ItemTagType.END }
+        player.openMenu<Basic>("Fenestra Types") {
+            rows(6)
+            onBuild { _, inv ->
                 types.forEachIndexed { index, type ->
-                    it.setItem(
-                        Items.INVENTORY_CENTER[index], ItemBuilder(Material.PAPER)
+                    inv.setItem(
+                        inventoryCenterSlots[index],
+                        ItemBuilder(XMaterial.PAPER)
                             .name("§7$type")
-                            .lore("§8${TLocale.asString(player, "command-input-select")}")
+                            .lore("§8${player.asLangText("command-input-select")}")
                             .build()
                     )
                 }
-            }.click {
-                if (it.rawSlot in Items.INVENTORY_CENTER && it.currentItem?.type == Material.PAPER) {
+            }
+            onClick {
+                if (it.rawSlot in inventoryCenterSlots && it.currentItem?.type == Material.PAPER) {
                     closeLogic = false
                     player.closeInventory()
-                    future.complete(types[Items.INVENTORY_CENTER.indexOf(it.rawSlot)])
+                    future.complete(types[inventoryCenterSlots.indexOf(it.rawSlot)])
                 }
-            }.close {
+            }
+            onClose {
                 if (closeLogic) {
                     future.complete(null)
                 }
-            }.open(player)
+            }
+        }
         return future
     }
 }

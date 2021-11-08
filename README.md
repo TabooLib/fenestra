@@ -1,19 +1,12 @@
-# Building
+# Fenestra
+Fenestra 是免费的，但我们不提供 jar 文件，你可以通过以下步骤自行构建插件。
 
-* [Gradle](https://gradle.org/) - Dependency Management
-
-The GradleWrapper in included in this project.
-
-On Windows:
-
-```
+**Windows 平台**
+```shell
 gradlew.bat clean build
 ```
 
-On MacOS/Linux:
-
-```
+**macOS/Linux 平台**
+```shell
 ./gradlew clean build
 ```
-
-Build artifacts should be found in `./build/libs` folder.

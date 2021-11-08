@@ -2,17 +2,15 @@ package ink.ptms.fenestra
 
 import ink.ptms.fenestra.FenestraAPI.cancelWorkspace
 import ink.ptms.fenestra.FenestraAPI.inWorkspace
-import io.izzel.taboolib.kotlin.sendLocale
-import io.izzel.taboolib.module.inject.TListener
-import io.izzel.taboolib.module.inject.TSchedule
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerItemHeldEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
+import taboolib.common.platform.Schedule
+import taboolib.platform.util.sendLang
 
 /**
  * Fenestra
@@ -21,14 +19,13 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent
  * @author sky
  * @since 2021/5/17 11:38 下午
  */
-@TListener
-class FenestraEvents : Listener {
+object FenestraEvents {
 
-    @TSchedule(period = 20)
+    @Schedule(period = 20)
     fun e() {
         Bukkit.getOnlinePlayers().forEach {
             if (it.inWorkspace) {
-                it.sendLocale("workspace-notify")
+                it.sendLang("workspace-notify")
             }
         }
     }

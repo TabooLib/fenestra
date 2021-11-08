@@ -1,5 +1,5 @@
 default:
-  line-size: 34
+  line-size: 30
   text-path:
     - display.Name
     - display.Lore
