@@ -22,7 +22,7 @@ taboolib {
     install("platform-bukkit")
     install("expansion-command-helper")
     classifier = null
-    version = "6.0.6-10"
+    version = "6.0.6-13"
 }
 
 repositories {
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("ink.ptms.core:v11600:11600-minimize")
+    compileOnly("ink.ptms.core:v11604:11604")
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 }
