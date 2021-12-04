@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("ink.ptms.core:v11604:11604")
+    compileOnly("ink.ptms.core:v11600:11600:all")
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 }
