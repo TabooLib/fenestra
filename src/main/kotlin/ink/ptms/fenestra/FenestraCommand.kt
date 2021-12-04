@@ -20,7 +20,7 @@ import taboolib.module.nms.ItemTagType
  * @since 2021/5/15 11:50 下午
  */
 @CommandHeader(name = "fenestra", aliases = ["fe"], permission = "admin")
-class FenestraCommand {
+object FenestraCommand {
 
     @CommandBody
     val main = mainCommand {

@@ -4,15 +4,15 @@ command-info-description: '查看物品数据'
 command-input-select: '点击选择'
 command-node-hover: '点击编辑'
 workspace-notify:
-  type: ACTION
+  type: ACTIONBAR
   text: '当前为「&e&lFenestra&f」的编辑模式, 按下 &e&lQ&f 键退出 | 按下 &e&lF&f 键保存并退出'
 workspace-cancel:
-  - type: ACTION
+  - type: ACTIONBAR
     text: ''
   - type: TEXT
     text: '&c[Fenestra] &7已退出编辑模式。'
 workspace-cancel-and-save:
-  - type: ACTION
+  - type: ACTIONBAR
     text: ''
   - type: TEXT
     text: '&c[Fenestra] &7已保存物品数据并退出编辑模式。'
