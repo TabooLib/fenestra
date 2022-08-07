@@ -14,6 +14,7 @@ import taboolib.module.chat.TellrawJson
 import taboolib.module.nms.ItemTagData
 import taboolib.module.nms.ItemTagType
 import taboolib.module.nms.getItemTag
+import taboolib.module.nms.getName
 import taboolib.platform.util.asLangText
 import java.util.*
 
@@ -55,6 +56,9 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             player.newWorkspace()
         }
         splitLine(true)
+        player.newJson {
+            append("§7Type: §f${itemStack.type.name} \n").suggestCommand(itemStack.type.name).hoverText("点击复制")
+        }
         if (compound.isEmpty()) {
             player.newJson {
                 if (isReadOnly) {
