@@ -36,6 +36,11 @@ object FenestraCommand {
 
     @CommandBody
     val info = subCommand {
+        dynamic(commit = "console") {
+            execute<Player> { sender, _, _ ->
+                sender.createWorkspace(readMode = true, toConsole = true)
+            }
+        }
         execute<Player> { sender, _, _ ->
             sender.createWorkspace(readMode = true)
         }
