@@ -26,12 +26,11 @@ taboolib {
 }
 
 repositories {
-    maven { url = uri("https://repo.tabooproject.org/storages/public/releases") }
     mavenCentral()
 }
 
 dependencies {
-    compileOnly("ink.ptms.core:v11600:11600")
+    compileOnly("ink.ptms.core:v11600:11600@jar")
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 }
