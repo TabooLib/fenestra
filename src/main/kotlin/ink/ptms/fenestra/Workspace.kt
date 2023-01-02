@@ -2,9 +2,11 @@ package ink.ptms.fenestra
 
 import com.google.common.base.Strings
 import ink.ptms.fenestra.FenestraAPI.toLegacyText
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.common.platform.function.adaptPlayer
@@ -24,7 +26,7 @@ import java.util.*
  * @author sky
  * @since 2021/5/16 12:08 上午
  */
-class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Boolean = false) {
+class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadOnly: Boolean = false) {
 
     /**
      * 当前物品数据
@@ -55,6 +57,9 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
             player.newWorkspace()
         }
         splitLine(true)
+        player.newJson {
+            append("§7Type: §f${itemStack.type.name} \n").suggestCommand(itemStack.type.name).hoverText("点击复制")
+        }
         if (compound.isEmpty()) {
             player.newJson {
                 if (isReadOnly) {
@@ -64,7 +69,11 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
                 }
             }
         } else {
-            compound.keys.forEach { player.newJson { appendJson(it, it, compound[it]!!, 1, null) } }
+            compound.keys.forEach {
+                player.newJson {
+                    appendJson(it, it, compound[it]!!, 1, null)
+                }
+            }
         }
         splitLine(false)
     }
@@ -82,14 +91,14 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
      */
     fun updateState(value: Any) {
         stateBar.setTitle(player.asLangText("workspace-state", value))
-        stateBar.addPlayer(player)
+        stateBar.addPlayer(player as? Player ?: return)
     }
 
     /**
      * 取消玩家的编辑状态显示
      */
     fun cancelState() {
-        stateBar.removePlayer(player)
+        stateBar.removePlayer(player as? Player ?: return)
     }
 
     /**
@@ -160,19 +169,48 @@ class Workspace(val player: Player, val itemStack: ItemStack, val isReadOnly: Bo
                     array.removeAt(index)
                     parent.setProperty("data", array.toIntArray())
                 }
+
                 else -> {
                 }
             }
         }
     }
 
-    private fun Player.newWorkspace() = TellrawJson().also { json -> repeat(100) { json.newLine() } }.sendTo(adaptPlayer(this))
-
-    private fun Player.newJson(prefix: String = "  ", func: TellrawJson.() -> Unit) {
-        TellrawJson().append(prefix).also(func).sendTo(adaptPlayer(this))
+    private fun CommandSender.newWorkspace() {
+        if (this is Player) {
+            TellrawJson().also { json -> repeat(100) { json.newLine() } }.sendTo(adaptPlayer(this))
+        } else {
+            val build = StringBuilder()
+            TellrawJson().also { json -> repeat(100) { json.newLine() } }.componentsAll.forEach {
+                if (it is TextComponent) {
+                    build.append(it.text)
+                }
+            }
+            sendMessage(build.toString())
+        }
     }
 
-    private fun TellrawJson.editJson(nbt: ItemTagData, path: String, node: String, parent: Channel?, index: Int = -1): TellrawJson {
+    private fun CommandSender.newJson(prefix: String = "  ", func: TellrawJson.() -> Unit) {
+        if (this is Player) {
+            TellrawJson().append(prefix).also(func).sendTo(adaptPlayer(this))
+        } else {
+            val build = StringBuilder()
+            TellrawJson().append(prefix).also(func).componentsAll.forEach {
+                if (it is TextComponent) {
+                    build.append(it.text)
+                }
+            }
+            sendMessage(build.toString())
+        }
+    }
+
+    private fun TellrawJson.editJson(
+        nbt: ItemTagData,
+        path: String,
+        node: String,
+        parent: Channel?,
+        index: Int = -1
+    ): TellrawJson {
         val source = if (nbt.type == ItemTagType.STRING) "\n§f${nbt.asString()}" else ""
         if (isReadOnly) {
             hoverText("§7$path$source")

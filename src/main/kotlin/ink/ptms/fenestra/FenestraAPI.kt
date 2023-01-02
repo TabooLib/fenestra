@@ -2,6 +2,7 @@ package ink.ptms.fenestra
 
 import net.md_5.bungee.api.chat.TextComponent
 import net.md_5.bungee.chat.ComponentSerializer
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerQuitEvent
 import taboolib.common.platform.event.SubscribeEvent
@@ -31,14 +32,18 @@ object FenestraAPI {
     /**
      * 进入编辑模式
      */
-    fun Player.createWorkspace(readMode: Boolean = false) {
+    fun Player.createWorkspace(readMode: Boolean = false, toConsole: Boolean = false) {
         val itemInMainHand = inventory.itemInMainHand
         if (itemInMainHand.isAir()) {
             sendLang("command-edit-item-air")
             return
         }
         if (readMode) {
-            Workspace(this, itemInMainHand, true)
+            if (toConsole) {
+                Workspace(Bukkit.getConsoleSender(), itemInMainHand, true)
+            } else {
+                Workspace(this, itemInMainHand, true)
+            }
         } else {
             FenestraAPI.workspace[name] = Workspace(this, itemInMainHand)
         }
