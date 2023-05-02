@@ -11,7 +11,9 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.common.platform.function.adaptPlayer
 import taboolib.common.reflect.Reflex.Companion.setProperty
+import taboolib.common.util.asList
 import taboolib.common5.Coerce
+import taboolib.module.chat.RawMessage
 import taboolib.module.chat.TellrawJson
 import taboolib.module.nms.ItemTagData
 import taboolib.module.nms.ItemTagType
@@ -65,7 +67,8 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                 if (isReadOnly) {
                     append("§f{ }")
                 } else {
-                    append("§f{ }").runCommand("/fenestra update create 0").hoverText("§7${player.asLangText("command-node-hover")}")
+                    append("§f{ }").runCommand("/fenestra update create 0")
+                        .hoverText("§7${player.asLangText("command-node-hover")}")
                 }
             }
         } else {
@@ -126,11 +129,18 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
     /**
      * 新增数据
      */
-    fun createChannel(channel: Channel, type: ItemTagType, node: String? = null, data: Any? = null, children: Boolean = false) {
+    fun createChannel(
+        channel: Channel,
+        type: ItemTagType,
+        node: String? = null,
+        data: Any? = null,
+        children: Boolean = false
+    ) {
         when {
             children -> {
                 writeNBT("${channel.path}${if (node == null) "" else ".$node"}", channel.nbt, type, node, data)
             }
+
             channel.parent == null -> {
                 compound[node] = when {
                     type.isListType() -> type.createEmptyListData()
@@ -138,6 +148,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     else -> return
                 }
             }
+
             else -> {
                 writeNBT(channel.path, channel.parent.nbt, type, node, data)
             }
@@ -156,14 +167,17 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                 ItemTagType.COMPOUND -> {
                     parent.asCompound().remove(channel.node)
                 }
+
                 ItemTagType.LIST -> {
                     parent.asList().remove(channel.nbt)
                 }
+
                 ItemTagType.BYTE_ARRAY -> {
                     val array = parent.asByteArray().toMutableList()
                     array.removeAt(index)
                     parent.setProperty("data", array.toByteArray())
                 }
+
                 ItemTagType.INT_ARRAY -> {
                     val array = parent.asIntArray().toMutableList()
                     array.removeAt(index)
@@ -176,15 +190,17 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
         }
     }
 
+    fun RawMessage.componentsAll(): List<String> {
+        return this.component.asList()
+    }
+
     private fun CommandSender.newWorkspace() {
         if (this is Player) {
             TellrawJson().also { json -> repeat(100) { json.newLine() } }.sendTo(adaptPlayer(this))
         } else {
             val build = StringBuilder()
-            TellrawJson().also { json -> repeat(100) { json.newLine() } }.componentsAll.forEach {
-                if (it is TextComponent) {
-                    build.append(it.text)
-                }
+            TellrawJson().also { json -> repeat(100) { json.newLine() } }.componentsAll().forEach {
+                build.append(it + "\n")
             }
             sendMessage(build.toString())
         }
@@ -195,10 +211,8 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
             TellrawJson().append(prefix).also(func).sendTo(adaptPlayer(this))
         } else {
             val build = StringBuilder()
-            TellrawJson().append(prefix).also(func).componentsAll.forEach {
-                if (it is TextComponent) {
-                    build.append(it.text)
-                }
+            TellrawJson().append(prefix).also(func).componentsAll().forEach {
+                build.append(it + "\n")
             }
             sendMessage(build.toString())
         }
@@ -222,7 +236,14 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
         return runCommand("/fenestra update $uuid $index").hoverText("§7${player.asLangText("command-node-hover")}\n§8$path$source")
     }
 
-    private fun TellrawJson.appendJson(path: String, node: String, nbt: ItemTagData, space: Int, parent: Channel?, inList: Boolean = false): TellrawJson {
+    private fun TellrawJson.appendJson(
+        path: String,
+        node: String,
+        nbt: ItemTagData,
+        space: Int,
+        parent: Channel?,
+        inList: Boolean = false
+    ): TellrawJson {
         if (node.contains('.')) {
             append("§c<$node>").hoverText(player.asLangText("workspace-not-edit"))
             return this
@@ -233,6 +254,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     append("§8$node: ")
                 }
             }
+
             ItemTagType.BYTE_ARRAY, ItemTagType.INT_ARRAY, ItemTagType.COMPOUND, ItemTagType.LIST -> {
                 if (!inList) {
                     append("§7$node: ").editJson(nbt, path, node, parent)
@@ -240,6 +262,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     channels[UUID.randomUUID().toString()] = Channel(nbt, path, node, parent)
                 }
             }
+
             else -> {
             }
         }
@@ -247,21 +270,25 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
             ItemTagType.STRING -> {
                 append("§7'§f${nbt.asString().toLegacyText()}§7'").editJson(nbt, path, node, parent)
             }
+
             ItemTagType.BYTE, ItemTagType.SHORT, ItemTagType.LONG, ItemTagType.FLOAT, ItemTagType.INT, ItemTagType.DOUBLE -> {
                 append("§f${nbt.asString()}§7${nbt.type.suffix()}").editJson(nbt, path, node, parent)
             }
+
             ItemTagType.LIST -> {
                 val channel = getChannel(nbt)
                 nbt.asList().forEachIndexed { index, data ->
                     if (!inList || index > 0) {
                         newLine().append(repeat(inList, space + 1, index))
                     }
-                    append("- ").editJson(data, path, node, channel, index).appendJson(path, node, data, space, channel, true)
+                    append("- ").editJson(data, path, node, channel, index)
+                        .appendJson(path, node, data, space, channel, true)
                 }
                 if (nbt.asList().isEmpty()) {
                     append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Any)")
                 }
             }
+
             ItemTagType.INT_ARRAY -> {
                 val channel = getChannel(nbt)
                 nbt.asIntArray().forEachIndexed { index, data ->
@@ -274,9 +301,12 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     append("§f[ ]").editJson(nbt, path, node, parent, -2).append(" §7(Int)")
                 }
             }
+
             ItemTagType.BYTE_ARRAY -> {
-                append("§8${nbt.asByteArray().size} Bytes").editJson(nbt, path, node, parent, -2).hoverText(player.asLangText("workspace-not-edit"))
+                append("§8${nbt.asByteArray().size} Bytes").editJson(nbt, path, node, parent, -2)
+                    .hoverText(player.asLangText("workspace-not-edit"))
             }
+
             ItemTagType.COMPOUND -> {
                 val channel = getChannel(nbt)
                 var i = 0
@@ -291,6 +321,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     append("§f{ }").editJson(nbt, path, node, parent, -2)
                 }
             }
+
             else -> {
             }
         }
@@ -335,6 +366,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     else -> return
                 }
             }
+
             ItemTagType.LIST -> {
                 base.asList().add(
                     when {
@@ -344,16 +376,19 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
                     }
                 )
             }
+
             ItemTagType.INT_ARRAY -> {
                 val array = base.asIntArray().toMutableList()
                 array.add(Coerce.toInteger(data))
                 base.setProperty("data", array.toIntArray())
             }
+
             ItemTagType.BYTE_ARRAY -> {
                 val array = base.asByteArray().toMutableList()
                 array.add(Coerce.toByte(data))
                 base.setProperty("data", array.toByteArray())
             }
+
             else -> {
             }
         }

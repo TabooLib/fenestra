@@ -36,7 +36,7 @@ object FenestraCommand {
 
     @CommandBody
     val info = subCommand {
-        dynamic(commit = "console") {
+        dynamic(comment = "console") {
             execute<Player> { sender, _, _ ->
                 sender.createWorkspace(readMode = true, toConsole = true)
             }
@@ -48,8 +48,8 @@ object FenestraCommand {
 
     @CommandBody
     val update = subCommand {
-        dynamic(commit = "uuid") {
-            dynamic(commit = "index") {
+        dynamic(comment = "uuid") {
+            dynamic(comment = "index") {
                 execute<Player> { sender, context, index ->
                     val workspace = sender.workspace ?: return@execute
                     val uuid = context.argument(-1)
