@@ -142,10 +142,12 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
             }
 
             channel.parent == null -> {
-                compound[node] = when {
-                    type.isListType() -> type.createEmptyListData()
-                    data != null -> type.createGenericData(node.toString(), data)
-                    else -> return
+                node?.let {
+                    compound[node] = when {
+                        type.isListType() -> type.createEmptyListData()
+                        data != null -> type.createGenericData(node.toString(), data)
+                        else -> return
+                    }
                 }
             }
 
@@ -360,10 +362,12 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
     private fun writeNBT(path: String, base: ItemTagData, type: ItemTagType, node: String?, data: Any?) {
         when (base.type) {
             ItemTagType.COMPOUND -> {
-                base.asCompound()[node] = when {
-                    type.isListType() -> type.createEmptyListData()
-                    data != null -> type.createGenericData(path, data)
-                    else -> return
+                node?.let {
+                    base.asCompound()[node] = when {
+                        type.isListType() -> type.createEmptyListData()
+                        data != null -> type.createGenericData(path, data)
+                        else -> return
+                    }
                 }
             }
 
