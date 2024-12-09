@@ -3,8 +3,8 @@ import io.izzel.taboolib.gradle.*
 plugins {
     `java-library`
     `maven-publish`
-    id("io.izzel.taboolib") version "2.0.20"
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    id("io.izzel.taboolib") version "2.0.22"
+    id("org.jetbrains.kotlin.jvm") version "1.8.22"
 }
 
 taboolib {
@@ -21,7 +21,7 @@ taboolib {
             BukkitNMSUtil,
         )
     }
-    version { taboolib = "6.2.0" }
+    version { taboolib = "6.2.1-f095116" }
 }
 
 repositories {
