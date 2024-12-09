@@ -33,7 +33,7 @@ class Workspace(val player: CommandSender, val itemStack: ItemStack, val isReadO
     /**
      * 当前物品数据
      */
-    val compound = itemStack.getItemTag()
+    val compound = itemStack.getItemTag(onlyCustom = false)
 
     /**
      * 当前工作通道
